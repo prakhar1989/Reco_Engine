@@ -70,5 +70,3 @@ def pearson_correlation_coeff(a, u):
 u = make_user_object(1)
 a = make_user_object(2)
 print pearson_correlation_coeff(a,u) # has to be between 1 and -1
-
-
