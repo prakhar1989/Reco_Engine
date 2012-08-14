@@ -7,6 +7,7 @@ class User():
         self.age = age
         self.occupation = occupation
         self.movie_ratings = {}
+        self.set_movie_ratings()
 
     def set_movie_ratings(self):
         """Fills up the movie_ratings dict with movies 
@@ -29,7 +30,7 @@ class User():
         Returns None if no rating is given"""
         if movie_name in self.movie_ratings.keys():
             return self.movie_ratings[movie_name]
-        return 0
+        return None
     
     def get_user_stats(self):
         """Returns the average rating by the user and the
@@ -61,12 +62,14 @@ def weight_similarity(a, u):
     Uses pearson correlation coefficient to compute the weight"""
     w = 0
     for m in a.movies():
-        w += (a.rating(m) - a.get_user_stats()[0]) * (u.rating(m) - u.get_user_stats()[0])
+        if u.rating(m):
+            print m
+            w += (a.rating(m) - a.get_user_stats()[0]) * (u.rating(m) - u.get_user_stats()[0])
     return w/(a.get_user_stats()[1] * u.get_user_stats()[1])
 
 #USAGE
 u = make_user_object(1)
 a = make_user_object(2)
-u.set_movie_ratings()
-a.set_movie_ratings()
-print weight_similarity(a, u) # has to be between 1 and -1
+print weight_similarity(a,u) # has to be between 1 and -1
+
+
