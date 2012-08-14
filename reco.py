@@ -7,6 +7,7 @@ class User():
         self.age = age
         self.occupation = occupation
         self.movie_ratings = {}
+        self.pcc_dict = {}
         self.set_movie_ratings()
 
     def set_movie_ratings(self):
@@ -42,6 +43,19 @@ class User():
         c.close
         return s[1]
 
+    def get_all_pcc(self):
+        """Returns a dict of PCC and corresponding neighbor for user a"""
+        conn = sqlite3.connect("data.db")
+        c = conn.cursor()
+        t = (self.id, )
+        c.execute("SELECT * FROM users where not user_id = ?", t)
+        users = c.fetchall()
+        c.close()
+        for u in users:
+            a = make_user_object(u[0])
+            self.pcc_dict[u[0]] = pearson_correlation_coeff(self, a)
+
+
 
 def make_user_object(i):
     """ Returns a user object with the id as i"""
@@ -74,12 +88,8 @@ def significance_weight(count, n = 10):
     if count >= n: return 1
     return float(count) / n
 
-def get_all_PCC(a):
-    """Returns a dict of PCC and corresponding neighbor."""
-
-
 #USAGE
 u = make_user_object(1)
-a = make_user_object(2)
+a = make_user_object(164)
 print pearson_correlation_coeff(a,u) # has to be between 1 and -1
-
+#a.get_all_pcc()
