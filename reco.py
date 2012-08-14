@@ -7,7 +7,6 @@ class User():
         self.age = age
         self.occupation = occupation
         self.movie_ratings = {}
-        self.pcc_dict = {}
         self.set_movie_ratings()
 
     def set_movie_ratings(self):
@@ -43,20 +42,6 @@ class User():
         c.close
         return s[1]
 
-    def get_all_pcc(self):
-        """Returns a dict of PCC and corresponding neighbor for user a"""
-        conn = sqlite3.connect("data.db")
-        c = conn.cursor()
-        t = (self.id, )
-        c.execute("SELECT * FROM users where not user_id = ?", t)
-        users = c.fetchall()
-        c.close()
-        for u in users:
-            a = make_user_object(u[0])
-            self.pcc_dict[u[0]] = pearson_correlation_coeff(self, a)
-
-
-
 def make_user_object(i):
     """ Returns a user object with the id as i"""
     conn = sqlite3.connect("data.db")
@@ -89,8 +74,26 @@ def significance_weight(count, n = 10):
     if count >= n: return 1
     return float(count) / n
 
+
+def set_all_pcc():
+    conn = sqlite3.connect("data.db")
+    c = conn.cursor()
+    #c.execute('''CREATE TABLE pcc_data (user_id INT, other_user_id INT, pcc REAL) ''')
+    for i in range(4, 7): #tweak this to add data in db. Its done till 6.
+         x = make_user_object(i)
+         t = (i, )
+         c.execute("SELECT * FROM users where not user_id = ?", t)
+         users = c.fetchall()
+         for u in users:
+             if u[0] > i:
+                 a = make_user_object(u[0])
+                 c.execute("INSERT INTO pcc_data VALUES (?, ?, ?)", 
+                          (i, u[0], pearson_correlation_coeff(x, a)))
+                 conn.commit()
+    c.close()
+
 #USAGE
-u = make_user_object(1)
-a = make_user_object(2)
-print pearson_correlation_coeff(a,u) # has to be between 1 and -1
-u.get_all_pcc()
+#u = make_user_object(1)
+#a = make_user_object(2)
+#print pearson_correlation_coeff(a,u) # has to be between 1 and -1
+set_all_pcc()
