@@ -61,7 +61,7 @@ def pearson_correlation_coeff(a, u):
     w, sigmaa, sigmau, count = (0, 0, 0, 1)
     for m in a.movies():
         if u.rating(m):
-            count = count + 1
+            count += 1
             w += (a.rating(m) - a.get_average_rating()) * (u.rating(m) - u.get_average_rating())
             sigmaa += (a.rating(m) - a.get_average_rating()) ** 2
             sigmau += (u.rating(m) - u.get_average_rating()) ** 2
