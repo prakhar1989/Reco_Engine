@@ -58,13 +58,19 @@ def make_user_object(i):
 def pearson_correlation_coeff(a, u):
     """ Returns the weight between active user a and neighbor u.
     Uses pearson correlation coefficient to compute the weight"""
-    w, sigmaa, sigmau = (0, 0, 0)
+    w, sigmaa, sigmau, count = (0, 0, 0, 1)
     for m in a.movies():
         if u.rating(m):
+            count = count + 1
             w += (a.rating(m) - a.get_average_rating()) * (u.rating(m) - u.get_average_rating())
             sigmaa += (a.rating(m) - a.get_average_rating()) ** 2
             sigmau += (u.rating(m) - u.get_average_rating()) ** 2
-    return w/((sigmaa ** 0.5) * (sigmau ** 0.5))
+    return w * signifiance_weight(count)/((sigmaa ** 0.5) * (sigmau ** 0.5))
+
+def signifiance_weight(n):
+    if n < 10:
+        return float(n)/10
+    return 1
 
 #USAGE
 u = make_user_object(1)
