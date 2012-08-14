@@ -57,19 +57,20 @@ def make_user_object(i):
     return user
 
 
-def weight_similarity(a, u):
+def pearson_correlation_coeff(a, u):
     """ Returns the weight between active user a and neighbor u.
     Uses pearson correlation coefficient to compute the weight"""
-    w = 0
+    w, sigmaa, sigmau = (0, 0, 0)
     for m in a.movies():
         if u.rating(m):
-            print m
             w += (a.rating(m) - a.get_user_stats()[0]) * (u.rating(m) - u.get_user_stats()[0])
-    return w/(a.get_user_stats()[1] * u.get_user_stats()[1])
+            sigmaa += (a.rating(m) - a.get_user_stats()[0]) ** 2
+            sigmau += (u.rating(m) - u.get_user_stats()[0]) ** 2
+    return w/((sigmaa ** 0.5) * (sigmau ** 0.5))
 
 #USAGE
 u = make_user_object(1)
 a = make_user_object(2)
-print weight_similarity(a,u) # has to be between 1 and -1
+print pearson_correlation_coeff(a,u) # has to be between 1 and -1
 
 
