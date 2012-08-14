@@ -66,7 +66,25 @@ def pearson_correlation_coeff(a, u):
             sigmau += (u.rating(m) - u.get_average_rating()) ** 2
     return w/((sigmaa ** 0.5) * (sigmau ** 0.5))
 
+
+def compute_significance_weighting(a, u, n = 10):
+    """Returns a weighting factor. If number of co-rated
+    items > n(default 10) then it returns 1 else returns
+    (no. of corated items) / n"""
+    count = 0
+    for m in a.movies():
+        if u.rating(m): count += 1
+    if count >= n: return 1
+    return float(count / n)
+
+def get_all_PCC(a):
+    """Returns a dict of PCC and corresponding neighbor.
+    Using significance weighting  """
+    pass
+
 #USAGE
 u = make_user_object(1)
 a = make_user_object(2)
 print pearson_correlation_coeff(a,u) # has to be between 1 and -1
+print compute_significance_weighting(a, u, 10)
+

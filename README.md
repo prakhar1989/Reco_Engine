@@ -1,4 +1,6 @@
-A Data Recomendation Experiment
-===============================
+Attempt to build a recommendation engine in python
 
-Using Collaborative filtering for recommendation.
+Data taken from [GroupLens project](http://www.grouplens.org/node/12/)
+
+Relevant Research [here](http://www.grouplens.org/papers/pdf/algs.pdf)
+
