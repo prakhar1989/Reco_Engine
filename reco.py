@@ -79,6 +79,7 @@ def pearson_correlation_coeff(a, u):
             w += (a.rating(m) - a.get_average_rating()) * (u.rating(m) - u.get_average_rating())
             sigmaa += (a.rating(m) - a.get_average_rating()) ** 2
             sigmau += (u.rating(m) - u.get_average_rating()) ** 2
+    if (sigmaa == 0) or (sigmau == 0): return 0
     return w * significance_weight(count)/((sigmaa ** 0.5) * (sigmau ** 0.5))
 
 def significance_weight(count, n = 10):
@@ -90,6 +91,6 @@ def significance_weight(count, n = 10):
 
 #USAGE
 u = make_user_object(1)
-a = make_user_object(164)
+a = make_user_object(2)
 print pearson_correlation_coeff(a,u) # has to be between 1 and -1
-#a.get_all_pcc()
+u.get_all_pcc()
