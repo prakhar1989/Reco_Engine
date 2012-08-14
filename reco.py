@@ -63,3 +63,5 @@ def weight_similarity(a, u):
     for m in a.movies():
         w += (a.rating(m) - a.get_user_stats()[0]) * (u.rating(m) - u.get_user_stats()[0])
     return w/(a.get_user_stats()[1] * u.get_user_stats()[1])
+
+#test comment
