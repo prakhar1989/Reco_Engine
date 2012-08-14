@@ -64,4 +64,9 @@ def weight_similarity(a, u):
         w += (a.rating(m) - a.get_user_stats()[0]) * (u.rating(m) - u.get_user_stats()[0])
     return w/(a.get_user_stats()[1] * u.get_user_stats()[1])
 
-#test comment
+#USAGE
+u = make_user_object(1)
+a = make_user_object(2)
+u.set_movie_ratings()
+a.set_movie_ratings()
+print weight_similarity(a, u) # has to be between 1 and -1
