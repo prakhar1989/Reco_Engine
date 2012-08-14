@@ -32,17 +32,15 @@ class User():
             return self.movie_ratings[movie_name]
         return None
     
-    def get_user_stats(self):
-        """Returns the average rating by the user and the
-        standard deviation in ratings.  To be used in 
-        calculating the pearson coefficient"""
+    def get_average_rating(self):
+        """Returns the average rating by the user"""
         conn = sqlite3.connect("data.db")
         c = conn.cursor()
         t = (self.id, )
         c.execute("select * from user_stats where user_id = ?", t)
         s = c.fetchone()
         c.close
-        return (s[1], s[2])
+        return s[1]
 
 
 def make_user_object(i):
@@ -63,9 +61,9 @@ def pearson_correlation_coeff(a, u):
     w, sigmaa, sigmau = (0, 0, 0)
     for m in a.movies():
         if u.rating(m):
-            w += (a.rating(m) - a.get_user_stats()[0]) * (u.rating(m) - u.get_user_stats()[0])
-            sigmaa += (a.rating(m) - a.get_user_stats()[0]) ** 2
-            sigmau += (u.rating(m) - u.get_user_stats()[0]) ** 2
+            w += (a.rating(m) - a.get_average_rating()) * (u.rating(m) - u.get_average_rating())
+            sigmaa += (a.rating(m) - a.get_average_rating()) ** 2
+            sigmau += (u.rating(m) - u.get_average_rating()) ** 2
     return w/((sigmaa ** 0.5) * (sigmau ** 0.5))
 
 #USAGE
