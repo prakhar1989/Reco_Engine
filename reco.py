@@ -43,7 +43,7 @@ class User():
         Returns None if no rating is given"""
         if movie_name in self.movie_ratings.keys():
             return self.movie_ratings[movie_name]
-        return 0
+        return None
     
     def get_average_rating(self):
         """Returns the average rating by the user"""
@@ -69,15 +69,11 @@ class User():
         list_of_users = filter(lambda (x,y): y > threshold, list_of_users)
         return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:n]
 
-    def get_matching_movies(self, i):   
+    def check_MR_exists(self, u, i):   
         """ Returns a list of matching movies with the current 
         user """
-        u = make_user_object(i)
-        movie_list = []
-        for m in self.movies():
-            if u.rating(m):
-                movie_list.append(m)
-        return movie_list
+        if (u.rating(i) and self.rating(i)): return True
+        return False
 
 def make_user_object(i):
     """ Returns a user object with the id as i"""
@@ -130,7 +126,7 @@ def set_all_pcc(i, j):
                  conn.commit()
     c.close()
 
-def filter_neighbours_out(a):
+def filter_neighbours_out(a,i):
     list_of_users = []
     conn = sqlite3.connect("data.db")
     c = conn.cursor()
@@ -139,19 +135,21 @@ def filter_neighbours_out(a):
     for r in c.fetchall():
         m = (r[1],r[2])
         list_of_users.append(m)
-    list_of_users = filter(lambda (x,y): y>0.1,list_of_users)
+    list_of_users = filter(lambda (x,y): a.check_MR_exists(make_user_object(x),i) and y>0.1,list_of_users)
     return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:20]
 
 def predict_rating(a,i):
     ravg,sigmaa = a.get_average_rating()
     sum_num,sum_den = (0,0)
-    for tup in filter_neighbours_out(a):
+    for tup in filter_neighbours_out(a,i):
         j,w = tup
         u = make_user_object(j)
         sum_num += ((u.rating(i) - u.get_average_rating()[0])/u.get_average_rating()[1]) * w
         sum_den += w
-    return ravg + sigmaa * (sum_num/sum_den)
+    print ravg
+    print (sigmaa * (sum_num/sum_den))
+    return ravg + (sigmaa * (sum_num/sum_den))
 
 #USAGE
 a = make_user_object(2)
-print predict_rating(a,24)
+print predict_rating(a,237)
