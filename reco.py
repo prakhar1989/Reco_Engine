@@ -62,7 +62,13 @@ class User():
     def check_MR_exists(self, u, i):   
         """ Returns a list of matching movies with the current 
         user """
-        if (u.rating(i) and self.rating(i)): return True
+        conn = sqlite3.connect("data.db")
+        c = conn.cursor()
+        t = (u,i)
+        c.execute("select * from data where user_id = ? and movie_id = ?", t)
+        s = c.fetchall()
+        c.close
+        if (len(s) > 0 and self.rating(i)): return True
         return False
 
     def filter_neighbours_out(self,i, threshold = 0.1, n = 20):
@@ -73,7 +79,7 @@ class User():
         for r in data:
             m = (r[1],r[2])
             list_of_users.append(m)
-        list_of_users = filter(lambda (x,y): a.check_MR_exists(make_user_object(x),i) and
+        list_of_users = filter(lambda (x,y): a.check_MR_exists(x,i) and
                                              y > threshold, list_of_users)
         return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:n]
 
@@ -114,7 +120,7 @@ def pearson_correlation_coeff(a, u):
     if (sigmaa == 0) or (sigmau == 0): return 0
     return w * significance_weight(count)/((sigmaa ** 0.5) * (sigmau ** 0.5))
 
-def significance_weight(count, n = 10):
+def significance_weight(count, n = 15):
     """Returns a weighting factor. If number of co-rated
     items > n(default 10) then it returns 1 else returns
     (no. of corated items) / n"""
