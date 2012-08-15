@@ -8,6 +8,19 @@ class User():
         self.occupation = occupation
         self.movie_ratings = {}
         self.set_movie_ratings()
+        self.pcc_data = {}
+
+    def get_pcc_data(self):
+        conn = sqlite3.connect("data.db")
+        c = conn.cursor()
+        t = (self.id,)
+        c.execute("select * from pcc_data where user_id = ?", t)
+        data = c.fetchall()
+        if not data: return None
+        for d in data:
+            print d[1]
+            #self.pcc_data[d[1]] = d[3]
+        return self.pcc_data
 
     def set_movie_ratings(self):
         """Fills up the movie_ratings dict with movies 
@@ -74,12 +87,13 @@ def significance_weight(count, n = 10):
     if count >= n: return 1
     return float(count) / n
 
-
-def set_all_pcc():
+def set_all_pcc(i, j):
+    """ Fills the pcc data for the user i to user j
+    USE WITH CAUTION """
     conn = sqlite3.connect("data.db")
     c = conn.cursor()
     #c.execute('''CREATE TABLE pcc_data (user_id INT, other_user_id INT, pcc REAL) ''')
-    for i in range(10, 20): #tweak this to add data in db. Its done till 6.
+    for i in range(i, j+1): #tweak this to add data in db. Its done till 6.
          x = make_user_object(i)
          t = (i, )
          c.execute("SELECT * FROM users where not user_id = ?", t)
@@ -92,8 +106,9 @@ def set_all_pcc():
                  conn.commit()
     c.close()
 
+
 #USAGE
-#u = make_user_object(1)
-#a = make_user_object(2)
-#print pearson_correlation_coeff(a,u) # has to be between 1 and -1
-set_all_pcc()
+u = make_user_object(1)
+a = make_user_object(2)
+print pearson_correlation_coeff(a,u) # has to be between 1 and -1
+a.get_pcc_data()
