@@ -92,8 +92,21 @@ def set_all_pcc():
                  conn.commit()
     c.close()
 
+def filter_neighbours_out(a):
+    list_of_users = []
+    conn = sqlite3.connect("data.db")
+    c = conn.cursor()
+    t = (a.id,)
+    c.execute("SELECT * FROM pcc_data where user_id = ?", t)
+    for r in c.fetchall():
+        m = (r[1],r[2])
+        list_of_users.append(m)
+    list_of_users = filter(lambda (x,y): y>0.1,list_of_users)
+    return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:20]
+
+
 #USAGE
 #u = make_user_object(1)
-#a = make_user_object(2)
+a = make_user_object(2)
 #print pearson_correlation_coeff(a,u) # has to be between 1 and -1
-set_all_pcc()
+print filter_neighbours_out(a)
