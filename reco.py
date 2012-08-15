@@ -79,7 +79,7 @@ def set_all_pcc():
     conn = sqlite3.connect("data.db")
     c = conn.cursor()
     #c.execute('''CREATE TABLE pcc_data (user_id INT, other_user_id INT, pcc REAL) ''')
-    for i in range(4, 7): #tweak this to add data in db. Its done till 6.
+    for i in range(10, 20): #tweak this to add data in db. Its done till 6.
          x = make_user_object(i)
          t = (i, )
          c.execute("SELECT * FROM users where not user_id = ?", t)
