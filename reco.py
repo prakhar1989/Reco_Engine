@@ -46,7 +46,7 @@ class User():
         return 0
     
     def get_average_rating(self):
-        """Returns the average rating by the user"""
+        """Returns the average rating by the user and sigma"""
         conn = sqlite3.connect("data.db")
         c = conn.cursor()
         t = (self.id, )
@@ -54,6 +54,16 @@ class User():
         s = c.fetchone()
         c.close
         return (s[1],s[2])
+
+    def get_matching_movies(self, i):   
+        """ Returns a list of matching movies with the current 
+        user """
+        u = make_user_object(i)
+        movie_list = []
+        for m in self.movies():
+            if u.rating(m):
+                movie_list.append(m)
+        return movie_list
 
     def filter_neighbours_out(self, threshold = 0.1, n = 20):
         """Filers the top n neighbors for active user
@@ -67,17 +77,21 @@ class User():
             m = (r[1],r[2])
             list_of_users.append(m)
         list_of_users = filter(lambda (x,y): y > threshold, list_of_users)
+        c.close()
         return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:n]
 
-    def get_matching_movies(self, i):   
-        """ Returns a list of matching movies with the current 
-        user """
-        u = make_user_object(i)
-        movie_list = []
-        for m in self.movies():
-            if u.rating(m):
-                movie_list.append(m)
-        return movie_list
+    def predict_rating(self,i):
+        ravg,sigmaa = a.get_average_rating()
+        sum_num,sum_den = (0,0)
+        for tup in a.filter_neighbours_out():
+            j,w = tup
+            u = make_user_object(j)
+            sum_num += ((u.rating(i) - u.get_average_rating()[0])/u.get_average_rating()[1]) * w
+            sum_den += w
+        return ravg + sigmaa * (sum_num/sum_den)
+
+
+######### CLASS ENDS #############
 
 def make_user_object(i):
     """ Returns a user object with the id as i"""
@@ -89,7 +103,6 @@ def make_user_object(i):
     c.close()
     user = User(id = u[0], male = u[2], age = u[1], occupation = u[3])
     return user
-
 
 def pearson_correlation_coeff(a, u):
     """ Returns the weight between active user a and neighbor u.
@@ -130,28 +143,6 @@ def set_all_pcc(i, j):
                  conn.commit()
     c.close()
 
-def filter_neighbours_out(a):
-    list_of_users = []
-    conn = sqlite3.connect("data.db")
-    c = conn.cursor()
-    t = (a.id,)
-    c.execute("SELECT * FROM pcc_data where user_id = ?", t)
-    for r in c.fetchall():
-        m = (r[1],r[2])
-        list_of_users.append(m)
-    list_of_users = filter(lambda (x,y): y>0.1,list_of_users)
-    return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:20]
-
-def predict_rating(a,i):
-    ravg,sigmaa = a.get_average_rating()
-    sum_num,sum_den = (0,0)
-    for tup in filter_neighbours_out(a):
-        j,w = tup
-        u = make_user_object(j)
-        sum_num += ((u.rating(i) - u.get_average_rating()[0])/u.get_average_rating()[1]) * w
-        sum_den += w
-    return ravg + sigmaa * (sum_num/sum_den)
-
 #USAGE
-a = make_user_object(2)
-print predict_rating(a,24)
+a = make_user_object(1)
+print a.predict_rating(25)
