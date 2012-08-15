@@ -1,3 +1,158 @@
+
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
 import sqlite3
 
 class User():
@@ -43,10 +198,10 @@ class User():
         Returns None if no rating is given"""
         if movie_name in self.movie_ratings.keys():
             return self.movie_ratings[movie_name]
-        return 0
+        return None
     
     def get_average_rating(self):
-        """Returns the average rating by the user and sigma"""
+        """Returns the average rating by the user"""
         conn = sqlite3.connect("data.db")
         c = conn.cursor()
         t = (self.id, )
@@ -54,16 +209,6 @@ class User():
         s = c.fetchone()
         c.close
         return (s[1],s[2])
-
-    def get_matching_movies(self, i):   
-        """ Returns a list of matching movies with the current 
-        user """
-        u = make_user_object(i)
-        movie_list = []
-        for m in self.movies():
-            if u.rating(m):
-                movie_list.append(m)
-        return movie_list
 
     def filter_neighbours_out(self, threshold = 0.1, n = 20):
         """Filers the top n neighbors for active user
@@ -77,22 +222,38 @@ class User():
             m = (r[1],r[2])
             list_of_users.append(m)
         list_of_users = filter(lambda (x,y): y > threshold, list_of_users)
-        c.close()
         return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:n]
+
+    def check_MR_exists(self, u, i):   
+        """ Returns a list of matching movies with the current 
+        user """
+        if (u.rating(i) and self.rating(i)): return True
+        return False
+
+    def filter_neighbours_out(self,i):
+        list_of_users = []
+        conn = sqlite3.connect("data.db")
+        c = conn.cursor()
+        t = (a.id,)
+        c.execute("SELECT * FROM pcc_data where user_id = ?", t)
+        for r in c.fetchall():
+            m = (r[1],r[2])
+            list_of_users.append(m)
+        list_of_users = filter(lambda (x,y): a.check_MR_exists(make_user_object(x),i) and y>0.1,list_of_users)
+        return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:20]
 
     def predict_rating(self,i):
         ravg,sigmaa = a.get_average_rating()
         sum_num,sum_den = (0,0)
-        for tup in a.filter_neighbours_out():
+        for tup in a.filter_neighbours_out(i):
             j,w = tup
             u = make_user_object(j)
             sum_num += ((u.rating(i) - u.get_average_rating()[0])/u.get_average_rating()[1]) * w
             sum_den += w
-        return ravg + sigmaa * (sum_num/sum_den)
+        return ravg + (sigmaa * (sum_num/sum_den))
 
 
-######### CLASS ENDS #############
-
+#### CLASS ENDS ####
 def make_user_object(i):
     """ Returns a user object with the id as i"""
     conn = sqlite3.connect("data.db")
@@ -103,6 +264,7 @@ def make_user_object(i):
     c.close()
     user = User(id = u[0], male = u[2], age = u[1], occupation = u[3])
     return user
+
 
 def pearson_correlation_coeff(a, u):
     """ Returns the weight between active user a and neighbor u.
@@ -143,6 +305,8 @@ def set_all_pcc(i, j):
                  conn.commit()
     c.close()
 
+
 #USAGE
-a = make_user_object(1)
-print a.predict_rating(25)
+a = make_user_object(2)
+print a.predict_rating(237)
+
