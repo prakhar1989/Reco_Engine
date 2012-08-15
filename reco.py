@@ -55,6 +55,30 @@ class User():
         c.close
         return s[1]
 
+    def filter_neighbours_out(self, threshold = 0.1, n = 20):
+        """Filers the top n neighbors for active user
+        on basis of PCC given wieght > threshold"""
+        list_of_users = []
+        conn = sqlite3.connect("data.db")
+        c = conn.cursor()
+        t = (self.id,)
+        c.execute("SELECT * FROM pcc_data where user_id = ?", t)
+        for r in c.fetchall():
+            m = (r[1],r[2])
+            list_of_users.append(m)
+        list_of_users = filter(lambda (x,y): y > threshold, list_of_users)
+        return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:n]
+
+    def get_matching_movies(self, i):   
+        """ Returns a list of matching movies with the current 
+        user """
+        u = make_user_object(i)
+        movie_list = []
+        for m in self.movies():
+            if u.rating(m):
+                movie_list.append(m)
+        return movie_list
+
 def make_user_object(i):
     """ Returns a user object with the id as i"""
     conn = sqlite3.connect("data.db")
@@ -110,5 +134,7 @@ def set_all_pcc(i, j):
 #USAGE
 u = make_user_object(1)
 a = make_user_object(2)
-print pearson_correlation_coeff(a,u) # has to be between 1 and -1
-a.get_pcc_data()
+#print pearson_correlation_coeff(a,u) # has to be between 1 and -1
+#a.get_pcc_data()
+print u.filter_neighbours_out()
+print u.get_matching_movies(433)
