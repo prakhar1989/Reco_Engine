@@ -1,4 +1,7 @@
-Attempt to build a recommendation engine in python
+RecoBot
+=======
+
+#### Attempt to build a recommendation engine in python
 
 Data taken from [GroupLens project](http://www.grouplens.org/node/12/)
 
