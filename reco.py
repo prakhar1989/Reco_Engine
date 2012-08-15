@@ -43,7 +43,7 @@ class User():
         Returns None if no rating is given"""
         if movie_name in self.movie_ratings.keys():
             return self.movie_ratings[movie_name]
-        return None
+        return 0
     
     def get_average_rating(self):
         """Returns the average rating by the user"""
@@ -53,7 +53,7 @@ class User():
         c.execute("select * from user_stats where user_id = ?", t)
         s = c.fetchone()
         c.close
-        return s[1]
+        return (s[1],s[2])
 
     def filter_neighbours_out(self, threshold = 0.1, n = 20):
         """Filers the top n neighbors for active user
@@ -94,13 +94,13 @@ def make_user_object(i):
 def pearson_correlation_coeff(a, u):
     """ Returns the weight between active user a and neighbor u.
     Uses pearson correlation coefficient to compute the weight"""
-    w, sigmaa, sigmau, count = (0, 0, 0, 1)
+    w, sigmaa, sigmau, count = (0, 0, 0, 0)
     for m in a.movies():
         if u.rating(m):
             count += 1
-            w += (a.rating(m) - a.get_average_rating()) * (u.rating(m) - u.get_average_rating())
-            sigmaa += (a.rating(m) - a.get_average_rating()) ** 2
-            sigmau += (u.rating(m) - u.get_average_rating()) ** 2
+            w += (a.rating(m) - a.get_average_rating()[0]) * (u.rating(m) - u.get_average_rating()[0])
+            sigmaa += (a.rating(m) - a.get_average_rating()[0]) ** 2
+            sigmau += (u.rating(m) - u.get_average_rating()[0]) ** 2
     if (sigmaa == 0) or (sigmau == 0): return 0
     return w * significance_weight(count)/((sigmaa ** 0.5) * (sigmau ** 0.5))
 
@@ -130,11 +130,28 @@ def set_all_pcc(i, j):
                  conn.commit()
     c.close()
 
+def filter_neighbours_out(a):
+    list_of_users = []
+    conn = sqlite3.connect("data.db")
+    c = conn.cursor()
+    t = (a.id,)
+    c.execute("SELECT * FROM pcc_data where user_id = ?", t)
+    for r in c.fetchall():
+        m = (r[1],r[2])
+        list_of_users.append(m)
+    list_of_users = filter(lambda (x,y): y>0.1,list_of_users)
+    return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:20]
+
+def predict_rating(a,i):
+    ravg,sigmaa = a.get_average_rating()
+    sum_num,sum_den = (0,0)
+    for tup in filter_neighbours_out(a):
+        j,w = tup
+        u = make_user_object(j)
+        sum_num += ((u.rating(i) - u.get_average_rating()[0])/u.get_average_rating()[1]) * w
+        sum_den += w
+    return ravg + sigmaa * (sum_num/sum_den)
 
 #USAGE
-u = make_user_object(1)
 a = make_user_object(2)
-#print pearson_correlation_coeff(a,u) # has to be between 1 and -1
-#a.get_pcc_data()
-print u.filter_neighbours_out()
-print u.get_matching_movies(433)
+print predict_rating(a,24)
