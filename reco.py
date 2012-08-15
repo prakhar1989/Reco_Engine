@@ -10,16 +10,20 @@ class User():
         self.set_movie_ratings()
         self.pcc_data = {}
 
-    def get_pcc_data(self):
+    def fetch_pcc(self):
         conn = sqlite3.connect("data.db")
         c = conn.cursor()
         t = (self.id,)
         c.execute("select * from pcc_data where user_id = ?", t)
         data = c.fetchall()
+        c.close()
+        return data
+
+    def get_pcc_data(self):
+        data = self.fetch_pcc()
         if not data: return None
         for d in data:
             print d[1]
-            #self.pcc_data[d[1]] = d[3]
         return self.pcc_data
 
     def set_movie_ratings(self):
@@ -55,37 +59,23 @@ class User():
         c.close
         return (s[1],s[2])
 
-    def filter_neighbours_out(self, threshold = 0.1, n = 20):
-        """Filers the top n neighbors for active user
-        on basis of PCC given wieght > threshold"""
-        list_of_users = []
-        conn = sqlite3.connect("data.db")
-        c = conn.cursor()
-        t = (self.id,)
-        c.execute("SELECT * FROM pcc_data where user_id = ?", t)
-        for r in c.fetchall():
-            m = (r[1],r[2])
-            list_of_users.append(m)
-        list_of_users = filter(lambda (x,y): y > threshold, list_of_users)
-        return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:n]
-
     def check_MR_exists(self, u, i):   
         """ Returns a list of matching movies with the current 
         user """
         if (u.rating(i) and self.rating(i)): return True
         return False
 
-    def filter_neighbours_out(self,i):
+    def filter_neighbours_out(self,i, threshold = 0.1, n = 20):
+        """Filers the top n neighbors for active user
+        on basis of PCC given wieght > threshold"""
         list_of_users = []
-        conn = sqlite3.connect("data.db")
-        c = conn.cursor()
-        t = (a.id,)
-        c.execute("SELECT * FROM pcc_data where user_id = ?", t)
-        for r in c.fetchall():
+        data = self.fetch_pcc()
+        for r in data:
             m = (r[1],r[2])
             list_of_users.append(m)
-        list_of_users = filter(lambda (x,y): a.check_MR_exists(make_user_object(x),i) and y>0.1,list_of_users)
-        return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:20]
+        list_of_users = filter(lambda (x,y): a.check_MR_exists(make_user_object(x),i) and
+                                             y > threshold, list_of_users)
+        return sorted(list_of_users, key=lambda list: list[1], reverse=True)[:n]
 
     def predict_rating(self,i):
         ravg,sigmaa = a.get_average_rating()
